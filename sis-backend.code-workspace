@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "sis-backend",
+			"path": "."
+		},
+		{
+			"name": "sis-backend-dev-environment",
+			"path": "../sis-backend-dev-environment"
+		}
+	],
+	"settings": {}
+}

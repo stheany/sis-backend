@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- SYSTEM.bic_code — real SWIFT-style BIC, distinct from system_name
+         (which holds internal labels like "NCS", not BICs). Needed before
+         senderBic/receiverBic can be real for BKLV transfers. -->
+    <changeSet id="20260814-01-add-bic-code" author="sis-backend">
+        <addColumn tableName="SYSTEM">
+            <column name="bic_code" type="varchar(11)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

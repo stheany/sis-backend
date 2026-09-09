@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="Creating Users Login Sis" author="sokunthaneth">
+        <createTable tableName="USERS_LOGIN_SIS">
+            <column name="users_login_sis_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="username" type="varchar(250)" />
+            <column name="PASSWORD" type="varchar(255)" />
+            <column name="last_name" type="varchar(250)" />
+            <column name="first_name" type="varchar(250)" />
+            <column name="full_name" type="varchar(250)" />
+            <column name="email" type="varchar(250)" />
+            <column name="description" type="text" />
+            <column name="status" type="int(2)" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="blocked_at" type="timestamp" />
+            <column name="blocked_by" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_blocked_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating System" author="sokunthaneth">
+        <createTable tableName="SYSTEM">
+            <column name="system_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="system_name" type="varchar(500)" />
+            <column name="short_name" type="varchar(500)" />
+            <column name="url" type="varchar(500)" />
+            <column name="ip_address" type="varchar(500)" />
+            <column name="status" type="int(2)" />
+            <column name="account_balance_condition" type="varchar(500)" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_system_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_system_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating System Login Sis" author="sokunthaneth">
+        <createTable tableName="SYSTEM_LOGIN_SIS">
+            <column name="system_login_sis_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="system_id" type="int">
+                <constraints foreignKeyName="fk_system_login_system_id" references="SYSTEM(system_id)" />
+            </column>
+            <column name="username" type="varchar(250)" />
+            <column name="PASSWORD" type="varchar(255)" />
+            <column name="status" type="int(2)" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_system_login_sis_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_system_login_sis_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="blocked_at" type="timestamp" />
+            <column name="blocked_by" type="int">
+                <constraints foreignKeyName="fk_system_login_sis_blocked_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Sis Login System" author="sokunthaneth">
+        <createTable tableName="SIS_LOGIN_SYSTEM">
+            <column name="sis_login_system_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="system_id" type="int">
+                <constraints foreignKeyName="fk_sis_login_system_id" references="SYSTEM(system_id)" />
+            </column>
+            <column name="username" type="varchar(250)" />
+            <column name="PASSWORD" type="varchar(255)" />
+            <column name="status" type="int(2)" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_sis_login_system_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_sis_login_system_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="blocked_at" type="timestamp" />
+            <column name="blocked_by" type="int">
+                <constraints foreignKeyName="fk_sis_login_system_blocked_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Status" author="sokunthaneth">
+        <createTable tableName="STATUS">
+            <column name="status_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="status_name" type="varchar(250)" />
+            <column name="description" type="varchar(500)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Environment" author="sokunthaneth">
+        <createTable tableName="ENVIRONMENT">
+            <column name="env_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="name" type="varchar(500)" />
+            <column name="description" type="text" />
+            <column name="url" type="text" />
+            <column name="CREATED_AT" type="timestamp" />
+            <column name="CREATED_BY" type="int">
+                <constraints foreignKeyName="FK_ENVIRONMENT_CREATED_BY" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="UPDATED_AT" type="timestamp" />
+            <column name="UPDATED_BY" type="int">
+                <constraints foreignKeyName="FK_ENVIRONMENT_UPDATED_BY" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Menu" author="sokunthaneth">
+        <createTable tableName="MENU">
+            <column name="menu_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="name" type="varchar(500)" />
+            <column name="description" type="varchar(2500)" />
+            <column name="status" type="int(2)" />
+            <column name="url" type="text" />
+            <column name="icon" type="text" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_menu_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_menu_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Action" author="sokunthaneth">
+        <createTable tableName="ACTION">
+            <column name="action_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="name" type="varchar(500)" />
+            <column name="description" type="varchar(2500)" />
+            <column name="status" type="int(2)" />
+            <column name="url" type="text" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_action_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_action_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Role" author="sokunthaneth">
+        <createTable tableName="ROLE">
+            <column name="role_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="name" type="varchar(500)" />
+            <column name="description" type="varchar(2500)" />
+            <column name="status" type="int(2)" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_role_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_role_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Permission" author="sokunthaneth">
+        <createTable tableName="PERMISSION">
+            <column name="permission_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="role_id" type="int">
+                <constraints foreignKeyName="fk_permission_role_id" references="ROLE(role_id)" />
+            </column>
+            <column name="action_id" type="int">
+                <constraints foreignKeyName="fk_permission_action_id" references="ACTION(action_id)" />
+            </column>
+            <column name="menu_id" type="int">
+                <constraints foreignKeyName="fk_permisson_menu_id" references="MENU(menu_id)" />
+            </column>
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_permission_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_permission_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="blocked_at" type="timestamp" />
+            <column name="blocked_by" type="int">
+                <constraints foreignKeyName="fk_permission_blocked_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating User Role" author="sokunthaneth">
+        <createTable tableName="USER_ROLE">
+            <column name="user_role_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="users_login_sis_id" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_role_user_id" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="role_id" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_role_role_id" references="ROLE(role_id)" />
+            </column>
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_role_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_role_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="blocked_at" type="timestamp" />
+            <column name="blocked_by" type="int">
+                <constraints foreignKeyName="fk_user_login_sis_role_blocked_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Flexcube" author="sokunthaneth">
+        <createTable tableName="FLEXCUBE">
+            <column name="flexcube_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="username" type="varchar(250)" />
+            <column name="PASSWORD" type="varchar(255)" />
+            <column name="environment_id" type="int">
+                <constraints foreignKeyName="fk_flexcube_environemnt_id" references="ENVIRONMENT(env_id)" />
+            </column>
+            <column name="flexcube_url" type="text" />
+            <column name="source" type="varchar(255)" />
+            <column name="ubscomp" type="varchar(255)" />
+            <column name="user_id" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="branch" type="varchar(255)" />
+            <column name="module_id" type="varchar(255)" />
+            <column name="service" type="varchar(255)" />
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_flexcube_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_flexcube_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Settle CBS" author="sokunthaneth">
+        <createTable tableName="SETTLE_CBS">
+            <column name="settle_cbs_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="system_id" type="int">
+                <constraints foreignKeyName="fk_settle_cbs_system_id" references="SYSTEM(system_id)" />
+            </column>
+            <column name="settlement_cbs_content" type="text" />
+            <column name="settlement_status_id" type="int(2)">
+                <constraints foreignKeyName="fk_settle_cbs_system_status" references="STATUS(status_id)" />
+            </column>
+            <column name="created_at" type="timestamp" />
+            <column name="updated_at" type="timestamp" />
+            <column name="sent_at" type="timestamp" />
+            <column name="flexcube_content" type="text" />
+            <column name="flexcube_response_status_id" type="int(2)">
+                <constraints foreignKeyName="fk_settle_cbs_system_flexcube_status" references="STATUS(status_id)" />
+            </column>
+            <column name="flexcube_response_at" type="timestamp" />
+            <column name="flexcube_message" type="text" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Settlement CBS Content Detail" author="sokunthaneth">
+        <createTable tableName="SETTLEMENT_CBS_CONTENT_DETAIL">
+            <column name="settle_cbs_con_detail_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="settle_cbs_id" type="int(2)">
+                <constraints foreignKeyName="fk_settle_cbs_content_detail_settle_cbs" references="SETTLE_CBS(settle_cbs_id)" />
+            </column>
+            <column name="flexcube_id" type="int(2)">
+                <constraints foreignKeyName="fk_settlement_cbs_content_detail_flexcube_id" references="FLEXCUBE(flexcube_id)" nullable="false" />
+            </column>
+            <column name="currency_code" type="varchar(3)">
+                <constraints nullable="false" />
+            </column>
+            <column name="customer_account" type="varchar(20)">
+                <constraints nullable="false" />
+            </column>
+            <column name="cr_dr" type="varchar(10)">
+                <constraints nullable="false" />
+            </column>
+            <column name="amount" type="decimal(20, 6)">
+                <constraints nullable="false" />
+            </column>
+            <column name="transaction_code" type="varchar(5)" />
+            <column name="entry_date" type="timestamp" remarks="transaction date">
+                <constraints nullable="false" />
+            </column>
+            <column name="value_date" type="timestamp" remarks="value date">
+                <constraints nullable="false" />
+            </column>
+            <column name="financial_year" type="varchar(5)">
+                <constraints nullable="false" />
+            </column>
+            <column name="financial_period" type="varchar(5)">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="varchar(500)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Iroha" author="sokunthaneth">
+        <createTable tableName="IROHA">
+            <column name="iroha_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="environment_id" type="int">
+                <constraints foreignKeyName="fk_iroha_environemnt_id" references="ENVIRONMENT(env_id)" />
+            </column>
+            <column name="created_at" type="timestamp" />
+            <column name="created_by" type="int">
+                <constraints foreignKeyName="fk_iroha_created_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="updated_at" type="timestamp" />
+            <column name="updated_by" type="int">
+                <constraints foreignKeyName="fk_iroha_updated_by" references="USERS_LOGIN_SIS(users_login_sis_id)" />
+            </column>
+            <column name="ip" type="varchar(50)" />
+            <column name="port" type="int(5)" />
+            <column name="account_id" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Settle Iroha" author="sokunthaneth">
+        <createTable tableName="SETTLE_IROHA">
+            <column name="settle_iroha_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="system_id" type="int">
+                <constraints foreignKeyName="fk_settle_iroha_system_id" references="SYSTEM(system_id)" />
+            </column>
+            <column name="settlement_iroha_content" type="text" />
+            <column name="settlement_status_id" type="int(2)">
+                <constraints foreignKeyName="fk_settle_iroha_status_id" references="STATUS(status_id)" />
+            </column>
+            <column name="created_at" type="timestamp" />
+            <column name="updated_at" type="timestamp" />
+            <column name="sent_at" type="timestamp" />
+            <column name="iroha_content" type="text" />
+            <column name="iroha_response_status_id" type="int(2)">
+                <constraints foreignKeyName="fk_settle_iroha_response_status_id" references="STATUS(status_id)" />
+            </column>
+            <column name="iroha_response_transaction_hash" type="text" />
+            <column name="iroha_response_at" type="timestamp" />
+            <column name="iroha_message" type="text" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Settlement Iroha Content Detail" author="sokunthaneth">
+        <createTable tableName="SETTLEMENT_IROHA_CONTENT_DETAIL">
+            <column name="settle_iroha_con_detail_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="settle_iroha_id" type="int(2)">
+                <constraints foreignKeyName="fk_settlement_iroha_content_detail_settle_iroha_id" references="SETTLE_IROHA(settle_iroha_id)" />
+            </column>
+            <column name="iroha_id" type="int(2)">
+                <constraints foreignKeyName="fk_settle_iroha_content_detail_iroha_id" references="IROHA(iroha_id)" nullable="false" />
+            </column>
+            <column name="currency_code" type="varchar(3)">
+                <constraints nullable="false" />
+            </column>
+            <column name="sender_account_id" type="varchar(250)">
+                <constraints nullable="false" />
+            </column>
+            <column name="receiver_account_id" type="varchar(250)">
+                <constraints nullable="false" />
+            </column>
+            <column name="amount" type="decimal(20, 6)">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="varchar(500)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Creating Token Block List" author="sokunthaneth">
+        <createTable tableName="TOKEN_BLOCKLIST">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="jti" type="varchar(200)" />
+            <column name="created_at" type="timestamp" />
+            <column name="remark" type="varchar(500)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="seed-initial-data" author="sokunthaneth">
+        <sqlFile path="../db/changelogs/seed-initial-data-20220621.sql" splitStatements="true" stripComments="true" />
+    </changeSet>
+</databaseChangeLog>

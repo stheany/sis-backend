@@ -1,0 +1,436 @@
+{
+  "info": {
+    "name": "SIS — BKLV Transfer (ABA → Acleda USD 500)",
+    "_postman_id": "sis-bklv-transfer-collection",
+    "description": "Manual test collection for the full BKLV fund transfer scenario:\nUserA (ABA Bank) → SIS → BKLV (makeFullFundTransfer) → Acleda Bank\n\nRun requests in order:\n  1. Login (get JWT token — auto-saved to collection variable)\n  2. POST /bklv/transfer (happy path)\n  3. Duplicate ext_ref (idempotency check)\n  4. Missing required field (payload validation)\n  5. Invalid currency (schema validation)\n  6. Unregistered destination bank (business rule)\n  7. Logout",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Change this to match your running SIS instance"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string",
+      "description": "Auto-populated by the Login request test script"
+    },
+    {
+      "key": "settle_id",
+      "value": "",
+      "type": "string",
+      "description": "Auto-populated by the happy-path transfer request"
+    }
+  ],
+  "item": [
+    {
+      "name": "Step 1 — Login (get JWT)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "",
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Access token present', function () {",
+              "    pm.expect(json.detail.data.access_token).to.be.a('string').and.not.empty;",
+              "});",
+              "",
+              "// Auto-save token for all subsequent requests",
+              "if (json.detail && json.detail.data && json.detail.data.access_token) {",
+              "    pm.collectionVariables.set('access_token', json.detail.data.access_token);",
+              "    console.log('Token saved:', json.detail.data.access_token.substring(0, 40) + '...');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"security@nbc.com\",\n  \"password\": \"admin\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/auth",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "auth"]
+        },
+        "description": "Authenticate ABA Bank's system account to get a JWT Bearer token.\nThe token is automatically stored in the 'access_token' collection variable."
+      }
+    },
+    {
+      "name": "Step 2 — Transfer USD 500 ABA → Acleda (Happy Path)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "",
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Settlement status is PENDING', function () {",
+              "    pm.expect(json.detail.data.settlement_status).to.eql('PENDING');",
+              "});",
+              "",
+              "pm.test('Settlement ID returned', function () {",
+              "    pm.expect(json.detail.data.id).to.be.a('number');",
+              "});",
+              "",
+              "pm.test('ext_ref matches request', function () {",
+              "    pm.expect(json.detail.data.ext_ref).to.eql('ABA-ACLEDA-USD-500-001');",
+              "});",
+              "",
+              "pm.test('created_at is present', function () {",
+              "    pm.expect(json.detail.data.created_at).to.be.a('string').and.not.empty;",
+              "});",
+              "",
+              "if (json.detail && json.detail.data && json.detail.data.id) {",
+              "    pm.collectionVariables.set('settle_id', json.detail.data.id);",
+              "    console.log('Settlement ID:', json.detail.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ext_ref\": \"ABA-ACLEDA-USD-500-001\",\n  \"source_bank\": \"ABA Bank\",\n  \"destination_bank\": \"Acleda Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"iso_message\": \"<Document xmlns=\\\"urn:iso:std:iso:20022:tech:xsd:pain.001.001.05\\\"><CstmrCdtTrfInitn><GrpHdr><MsgId>ABA-ACLEDA-USD-500-001</MsgId><CreDtTm>2026-03-30T10:00:00</CreDtTm><NbOfTxs>1</NbOfTxs><CtrlSum>500.00</CtrlSum><InitgPty><Nm>ABA Bank</Nm></InitgPty></GrpHdr><PmtInf><PmtInfId>PMT-001</PmtInfId><PmtMtd>TRF</PmtMtd><Dbtr><Nm>UserA</Nm></Dbtr><DbtrAcct><Id><Othr><Id>001234567890</Id></Othr></Id></DbtrAcct><CdtTrfTxInf><CdtrAgt><FinInstnId><Nm>Acleda Bank</Nm></FinInstnId></CdtrAgt><Cdtr><Nm>UserB</Nm></Cdtr><CdtrAcct><Id><Othr><Id>009876543210</Id></Othr></Id></CdtrAcct><Amt><InstdAmt Ccy=\\\"USD\\\">500.00</InstdAmt></Amt></CdtTrfTxInf></PmtInf></CstmrCdtTrfInitn></Document>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Happy path: UserA at ABA Bank transfers USD 500 to UserB at Acleda Bank.\n\nExpected response:\n- HTTP 200\n- settlement_status: PENDING\n- SIS creates a SETTLE_BKLV record and dispatches a Celery task\n  to send makeFullFundTransfer SOAP request to BKLV asynchronously."
+      }
+    },
+    {
+      "name": "Step 3 — Duplicate Request (Idempotency Check)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "",
+              "pm.test('Status 200 — existing record returned', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Duplicate message present', function () {",
+              "    pm.expect(json.detail.data.message).to.include('Duplicate');",
+              "});",
+              "",
+              "pm.test('Same settlement ID as original', function () {",
+              "    var savedId = pm.collectionVariables.get('settle_id');",
+              "    if (savedId) {",
+              "        pm.expect(json.detail.data.id).to.eql(Number(savedId));",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ext_ref\": \"ABA-ACLEDA-USD-500-001\",\n  \"source_bank\": \"ABA Bank\",\n  \"destination_bank\": \"Acleda Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"iso_message\": \"<Document xmlns=\\\"urn:iso:std:iso:20022:tech:xsd:pain.001.001.05\\\"><CstmrCdtTrfInitn><GrpHdr><MsgId>ABA-ACLEDA-USD-500-001</MsgId></GrpHdr></CstmrCdtTrfInitn></Document>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Sends the exact same ext_ref again.\n\nExpected: HTTP 200 with the original settlement record and a 'Duplicate' message.\nThe record is NOT created twice."
+      }
+    },
+    {
+      "name": "Step 4 — No JWT Token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 401 — Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test('Error message about missing token', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.detail.error_message).to.include('access token');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ext_ref\": \"ABA-ACLEDA-USD-500-999\",\n  \"source_bank\": \"ABA Bank\",\n  \"destination_bank\": \"Acleda Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"iso_message\": \"<Document/>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Request with no Authorization header.\n\nExpected: HTTP 401 — 'Request does not contain an access token!' (error_code 12)"
+      }
+    },
+    {
+      "name": "Step 5 — Missing Required Field: ext_ref (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Error mentions ext_ref', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.detail.error_message).to.include('ext_ref');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"source_bank\": \"ABA Bank\",\n  \"destination_bank\": \"Acleda Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"iso_message\": \"<Document/>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Omits the required 'ext_ref' field.\n\nExpected: HTTP 400 with error message naming 'ext_ref'."
+      }
+    },
+    {
+      "name": "Step 6 — Invalid Currency (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Error mentions currency', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.detail.error_message).to.include('currency');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ext_ref\": \"ABA-ACLEDA-EUR-500-001\",\n  \"source_bank\": \"ABA Bank\",\n  \"destination_bank\": \"Acleda Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 500.00,\n  \"currency\": \"EUR\",\n  \"iso_message\": \"<Document/>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Sends currency 'EUR' which is not in the allowed list [USD, KHR].\n\nExpected: HTTP 400 — 'currency: Must be one of: USD, KHR.'"
+      }
+    },
+    {
+      "name": "Step 7 — Zero Amount (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Error mentions amount', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.detail.error_message).to.include('amount');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ext_ref\": \"ABA-ACLEDA-USD-000-001\",\n  \"source_bank\": \"ABA Bank\",\n  \"destination_bank\": \"Acleda Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 0,\n  \"currency\": \"USD\",\n  \"iso_message\": \"<Document/>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Sends amount = 0 which fails the Range(min=0.01) validation.\n\nExpected: HTTP 400 — 'amount: Must be greater than or equal to 0.01.'"
+      }
+    },
+    {
+      "name": "Step 8 — Source Bank Not Registered (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Error code 41 — source bank not active', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.detail.error_code).to.eql(41);",
+              "    pm.expect(json.detail.error_message).to.include('Ghost Bank');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ext_ref\": \"GHOST-ACLEDA-USD-500-001\",\n  \"source_bank\": \"Ghost Bank\",\n  \"destination_bank\": \"Acleda Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"iso_message\": \"<Document/>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Uses a source bank name that does not exist in the SYSTEM table.\n\nExpected: HTTP 400 — error_code 41, 'Ghost Bank is not registered or not active'"
+      }
+    },
+    {
+      "name": "Step 9 — Destination Bank Not Registered (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Error code 42 — destination bank not active', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.detail.error_code).to.eql(42);",
+              "    pm.expect(json.detail.error_message).to.include('Phantom Bank');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ext_ref\": \"ABA-PHANTOM-USD-500-001\",\n  \"source_bank\": \"ABA Bank\",\n  \"destination_bank\": \"Phantom Bank\",\n  \"debit_account\": \"001234567890\",\n  \"amount\": 500.00,\n  \"currency\": \"USD\",\n  \"iso_message\": \"<Document/>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/bklv/transfer",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "bklv", "transfer"]
+        },
+        "description": "Uses a destination bank that does not exist in the SYSTEM table.\n\nExpected: HTTP 400 — error_code 42, 'Phantom Bank is not registered or not active'"
+      }
+    },
+    {
+      "name": "Step 10 — Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 — logged out', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Clear saved token",
+              "pm.collectionVariables.set('access_token', '');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/sis/logout",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "sis", "logout"]
+        },
+        "description": "Revokes the JWT token (adds it to the blocklist table).\nThe saved access_token variable is cleared automatically."
+      }
+    }
+  ]
+}

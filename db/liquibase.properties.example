@@ -1,0 +1,6 @@
+changelog-file: db.changelog-root.xml
+driver: oracle.jdbc.OracleDriver
+url: jdbc:oracle:thin:@172.16.17.197:1521/SISDB
+username: SISAPP
+password: SISAPP
+liquibase.hub.mode=off

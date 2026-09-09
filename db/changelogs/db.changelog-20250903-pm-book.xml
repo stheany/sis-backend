@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- SETTLE_PM_BOOK (header) -->
+    <changeSet id="20250903-01-create-settle-pm-book" author="rothtana">
+        <createTable tableName="SETTLE_PM_BOOK">
+            <column name="settle_pm_book_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="system_id" type="int">
+                <constraints foreignKeyName="fk_spb_system_id" references="SYSTEM(system_id)" nullable="false"/>
+            </column>
+
+            <column name="settlement_status_id" type="int(2)">
+                <constraints foreignKeyName="fk_spb_status_id" references="STATUS(status_id)" nullable="false"/>
+            </column>
+
+            <!-- external business reference / idempotency key -->
+            <column name="reference_id" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <!-- audit -->
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp"/>
+            <column name="sent_at" type="timestamp"/>
+
+            <!-- SOAP payloads -->
+            <column name="flexcube_content" type="text"/>
+            <column name="flexcube_message" type="text"/>
+            <column name="flexcube_response_status_id" type="int(2)">
+                <constraints foreignKeyName="fk_spb_resp_status_id" references="STATUS(status_id)"/>
+            </column>
+            <column name="flexcube_response_at" type="timestamp"/>
+
+            <!-- response metadata -->
+            <column name="msgstat" type="varchar(16)"/>
+            <column name="txn_ref_no" type="varchar(32)"/>
+            <column name="user_ref_no" type="varchar(32)"/>
+
+            <!-- convenience fields -->
+            <column name="dr_ac_no" type="varchar(32)"/>
+            <column name="cr_ac_no" type="varchar(32)"/>
+            <column name="transaction_amount" type="decimal(20,2)"/>
+            <column name="transaction_currency" type="varchar(3)"/>
+            <column name="txn_value_date" type="date"/>
+        </createTable>
+
+        <!-- indexes -->
+        <createIndex indexName="ix_spb_txn_ref_no" tableName="SETTLE_PM_BOOK">
+            <column name="txn_ref_no"/>
+        </createIndex>
+        <createIndex indexName="ix_spb_system_id" tableName="SETTLE_PM_BOOK">
+            <column name="system_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- SETTLEMENT_PM_BOOK_DETAIL (detail) -->
+    <changeSet id="20250903-02-create-settle-pm-book-detail" author="rothtana">
+        <createTable tableName="SETTLEMENT_PM_BOOK_DETAIL">
+            <column name="settlement_pm_book_detail_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="settle_pm_book_id" type="int">
+                <constraints foreignKeyName="fk_spbd_spb_id"
+                             references="SETTLE_PM_BOOK(settle_pm_book_id)"
+                             nullable="false"/>
+            </column>
+
+            <!-- core fields -->
+            <column name="dr_ac_no" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cr_ac_no" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_code" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="decimal(20,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- dates -->
+            <column name="txn_value_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instruction_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- codes -->
+            <column name="source_code" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="network_code" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="txn_branch" type="varchar(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="host_code" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- optional -->
+            <column name="remarks" type="varchar(255)"/>
+            <column name="charge_component" type="varchar(32)"/>
+            <column name="charge_amount" type="decimal(20,2)"/>
+            
+            <column name="flexcube_id" type="int">
+                <constraints foreignKeyName="fk_spbd_flexcube_id" references="FLEXCUBE(flexcube_id)"/>
+            </column>
+        </createTable>
+
+        <!-- indexes -->
+        <createIndex indexName="ix_spbd_spb_id" tableName="SETTLEMENT_PM_BOOK_DETAIL">
+            <column name="settle_pm_book_id"/>
+        </createIndex>
+        <createIndex indexName="ix_spbd_dr_ac_no" tableName="SETTLEMENT_PM_BOOK_DETAIL">
+            <column name="dr_ac_no"/>
+        </createIndex>
+        <createIndex indexName="ix_spbd_cr_ac_no" tableName="SETTLEMENT_PM_BOOK_DETAIL">
+            <column name="cr_ac_no"/>
+        </createIndex>
+    </changeSet>
+    
+</databaseChangeLog>

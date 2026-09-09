@@ -1,0 +1,71 @@
+image: python:latest
+
+stages:
+  - build
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  VARIABLE_DATA: Gitlab-CI-YAML
+  DOCKER_TLS_CERTDIR: ""
+  VERSION: "latest"
+
+include:
+  - template: Code-Quality.gitlab-ci.yml
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+# before_script:
+#   - python --version
+#   - pip install virtualenv
+#   - virtualenv venv
+#   - source venv/bin/activate
+
+code_quality:
+  stage: build
+  variables:
+    REPORT_FORMAT: html
+  artifacts:
+    paths: [gl-code-quality-report.html]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+      when: never
+    - when: on_success
+
+build_job:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:stable-dind
+  script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
+    - docker build -t $REGISTRY:$VERSION .
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+      when: never
+    - when: on_success
+
+master_job:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:stable-dind
+  script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
+    - docker build -t $REGISTRY:$VERSION .
+    - docker push $REGISTRY:$VERSION
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+
+# run:
+  # script:
+  #   - python setup.py bdist_wheel
+  #   # an alternative approach is to install and run:
+  #   - pip install dist/*
+  #   # run the command here
+  # artifacts:
+  #   paths:
+  #     - dist/*.whl

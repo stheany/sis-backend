@@ -1,0 +1,15 @@
+# Ignore below directories, files
+__pycache__
+.vscode
+static/img
+migrations
+database.db
+.env
+venv
+.venv
+.idea
+db/liquibase.properties
+logs/
+worker/app_log/worker_log.log
+.env.local
+sis-backend-dev-environment/sis-db/init/seed.sql

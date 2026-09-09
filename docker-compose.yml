@@ -1,0 +1,91 @@
+version: "3.9"
+
+volumes:
+  rabbit-data:
+
+services:
+  rabbit:
+    image: rabbitmq:3-management
+    container_name: system-integration-service-rabbit
+    hostname: rabbit
+    env_file: .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS:-mypass}
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbit-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  web:
+    build: .
+    container_name: system-integration-service-web
+    working_dir: /src
+    command: python3 app.py run -h 0.0.0.0 --no-reload
+    ports:
+      - "8000:5000"
+    env_file: .env
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-development}
+      FLASK_DEBUG: ${FLASK_DEBUG:-1}
+      TZ: "Asia/Phnom_Penh"
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/src"
+    volumes:
+      - ./application:/src/application/
+      - ./tests:/src/tests/
+      - ./worker:/src/worker/
+      - ./app.py:/src/app.py
+      - ./config.py:/src/config.py
+      - ./settings.py:/src/settings.py
+    restart: on-failure
+    depends_on:
+      rabbit:
+        condition: service_healthy
+
+  worker:
+    build: .
+    container_name: system-integration-service-worker
+    working_dir: /src
+    command: celery -A worker.celery_app worker --loglevel=info --logfile=/src/worker/app_log/worker_log.log
+    env_file: .env
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-development}
+      FLASK_DEBUG: ${FLASK_DEBUG:-1}
+      TZ: "Asia/Phnom_Penh"
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/src:/src/worker"
+    volumes:
+      - ./application:/src/application/
+      - ./tests:/src/tests/
+      - ./worker:/src/worker/
+      - ./app.py:/src/app.py
+      - ./config.py:/src/config.py
+      - ./worker/app_log:/src/worker/app_log
+      - ./settings.py:/src/settings.py
+    restart: on-failure
+    depends_on:
+      rabbit:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  nginx:
+    build: ./nginx
+    container_name: system-integration-service-nginx
+    ports:
+      - "1337:80"
+      - "443:443"
+    restart: always
+    env_file: .env
+    environment:
+      TZ: "Asia/Phnom_Penh"
+    depends_on:
+      web:
+        condition: service_started
